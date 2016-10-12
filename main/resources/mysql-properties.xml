@@ -3,7 +3,7 @@
 <properties>
   <entry key="dbms">mysql</entry>
   <entry key="driver">com.mysql.jdbc.Driver</entry>
-  <entry key="database_name">mercado</entry>
+  <entry key="database_name">libreria</entry>
   <entry key="user_name">root</entry>
   <entry key="password"></entry>
   <entry key="server_name">localhost</entry>
