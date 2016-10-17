@@ -1,5 +1,7 @@
 package JDBC.JDBCCafes;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import ClasesPrincipales.Cafes;
@@ -47,5 +49,61 @@ public class InteraccionLib {
 		miLibro.actualizarCopias(ISBN, copias);
 		miLibro.verCatalogo();
 		;
+	}
+	
+	public static void obtener(Libros miLibro) throws AccesoDatosException {
+		String [] campos = miLibro.getCamposLibro();
+		for(int i = 0; i<campos.length;i++){
+			System.out.print(campos[i]+",");
+		}
+	}
+	
+	public static void VerInverso(Libros miLibro) throws AccesoDatosException {
+		miLibro.verCatalogoInverso();
+	}
+	
+	public static void updateVarios(Libros miLibro) throws AccesoDatosException {
+		Scanner lc = new Scanner(System.in);
+		System.out.println("¿De cuantos libros distintos desea actualizar el número de copias?");
+		int num = lc.nextInt();		
+		HashMap <String,Integer> hashCopias = new HashMap <String,Integer>();
+		for(int i=0;i<num;i++){
+			System.out.println("Introduzca el ISBN del libro cuyas copias desea actualizar:");
+			String ISBN = lc.next();
+			System.out.println("Introduzca el nuevo total de copias del libro cuyos datos desea actualizar:");
+			int copias = lc.nextInt();
+			hashCopias.put(ISBN, copias);
+		}		
+		miLibro.actualizarCopias(hashCopias);
+		miLibro.verCatalogo();
+	}
+	
+	public static void mostrarFilas(Libros miLibro) throws AccesoDatosException {
+		Scanner lc = new Scanner(System.in);
+		System.out.println("¿Cuantas filas distintas quiere mostrar?");
+		int num = lc.nextInt();		
+		ArrayList <Integer> arrayFilas = new ArrayList <Integer>();
+		for(int i=0;i<num;i++){
+			System.out.println("Introduzca el nº de fila cuyos datos desea visualizar:");
+			int num2 = lc.nextInt();
+			arrayFilas.add(Integer.valueOf(num2));
+		}		
+		miLibro.mostrarFilas(arrayFilas);
+	}
+	
+	public static void updatePrecioPag(Libros miLibro) throws AccesoDatosException {
+		Scanner lc = new Scanner(System.in);
+		System.out.println("¿De cuantos libros distintos desea actualizar el precio por pagina?");
+		int num = lc.nextInt();		
+		HashMap <String,Float> hashPrecios = new HashMap <String,Float>();
+		for(int i=0;i<num;i++){
+			System.out.println("Introduzca el ISBN del libro cuyas copias desea actualizar:");
+			String ISBN = lc.next();
+			System.out.println("Introduzca el precio por pagina del libro cuyos datos desea actualizar:");
+			float precio = lc.nextFloat();
+			hashPrecios.put(ISBN, precio);
+		}		
+		miLibro.actualizarPrecioPag(hashPrecios);
+		miLibro.verCatalogo();
 	}
 }

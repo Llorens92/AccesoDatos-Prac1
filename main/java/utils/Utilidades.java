@@ -30,7 +30,7 @@ public class Utilidades {
 	
 	private static final String PROPERTIES_FILE="src\\main\\resources\\mysql-properties.xml";
 
-	public Utilidades()
+	public Utilidades(String PROPERTIES_FILE)
 			throws FileNotFoundException, IOException,
 			InvalidPropertiesFormatException {
 		super();

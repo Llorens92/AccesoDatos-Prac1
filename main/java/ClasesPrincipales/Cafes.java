@@ -11,7 +11,9 @@ import exceptions.AccesoDatosException;
 import utils.Utilidades;
 
 public class Cafes {
+	
 
+	private static final String PROPERTIES_FILE="src\\main\\resources\\mysql-properties.xml";
 	// Consultas a realizar en BD
 	private static final String SELECT_CAFES_QUERY = "select CAF_NOMBRE, PROV_ID, PRECIO, VENTAS, TOTAL from CAFES";
 	// En una consulta parametrizada ponemos interrogaciones en los valores que
@@ -25,7 +27,7 @@ public class Cafes {
 
 	public Cafes() throws AccesoDatosException {
 		try {
-			cn = new Utilidades().getConnection();
+			cn = new Utilidades(PROPERTIES_FILE).getConnection();
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");

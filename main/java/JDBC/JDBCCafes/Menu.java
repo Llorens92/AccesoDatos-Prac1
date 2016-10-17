@@ -20,6 +20,11 @@ public class Menu {
 				"2-Borrar Libro\n"
 				+ "3-Ver Catalogo\n"
 				+ "4-Actualizar Copias\n"
-				+ "5-Salir\n");
+				+ "5-Obtener campos libro\n"
+				+ "6-Ver Catalogo Inverso\n"
+				+ "7-Actualizar Copias (Varios)\n"
+				+ "8-Mostrar filas introducidas\n"
+				+ "9-Actualizar precio por pagina de uno o varios libros\n"
+				+ "10-Salir\n");
 	}
 }
