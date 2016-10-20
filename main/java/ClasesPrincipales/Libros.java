@@ -19,7 +19,7 @@ public class Libros {
 
 	private static final String PROPERTIES_FILE = "src\\main\\resources\\mysql-properties2.xml";
 
-	private static final String SELECT_LIBROS_QUERY = "select isbn, titulo, autor, editorial, paginas, copias from LIBROS ORDER BY TITULO ASC";
+	private static final String SELECT_LIBROS_QUERY = "select isbn, titulo, autor, editorial, paginas, copias, precio from LIBROS ORDER BY TITULO ASC";
 
 	private static final String SELECT_CAMPOS_QUERY = "SELECT * FROM LIBROS LIMIT 1";
 
@@ -140,8 +140,9 @@ public class Libros {
 				String editorial = rs.getString("editorial");
 				int paginas = rs.getInt("paginas");
 				int copias = rs.getInt("copias");
-				System.out.println(
-						ISBN + ", " + titulo + ", " + autor + ", " + editorial + ", " + paginas + ", " + copias);
+				float precio = rs.getFloat("precio");
+				System.out.println(ISBN + ", " + titulo + ", " + autor + ", " + editorial + ", " + paginas + ", "
+						+ copias + ", " + precio);
 			}
 			liberar();
 		} catch (SQLException sqle) {
@@ -232,7 +233,7 @@ public class Libros {
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
 		}
 	}
-	
+
 	public void actualizarPrecioPag(HashMap<String, Float> HashPrecio) throws AccesoDatosException {
 		try {
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
@@ -244,8 +245,8 @@ public class Libros {
 					String ISBN = rs.getString("ISBN");
 					if (ISBN.equalsIgnoreCase(isbnPasado)) {
 						int pag = rs.getInt("paginas");
-						pst = cn.prepareStatement("update Libros set precio = \"" + (pag*HashPrecio.get(ISBN))
-								+ "\"" + " where ISBN = \"" + isbnPasado + "\"");
+						pst = cn.prepareStatement("update Libros set precio = \"" + (pag * HashPrecio.get(ISBN)) + "\""
+								+ " where ISBN = \"" + isbnPasado + "\"");
 						pst.executeUpdate();
 					}
 				}
@@ -255,6 +256,123 @@ public class Libros {
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		}
+	}
+
+	public void transaccionPrecio(String isbn1, String isbn2, float precioPorPag) throws AccesoDatosException {
+		int pag1 = 0;
+		int pag2 = 0;
+		try {
+			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			rs = pst.executeQuery();
+			while (rs.next()) {
+				String ISBN = rs.getString("ISBN");
+				if (ISBN.equalsIgnoreCase(isbn1)) {
+					pag1 = rs.getInt("paginas");
+				}
+				if (ISBN.equalsIgnoreCase(isbn2)) {
+					pag2 = rs.getInt("paginas");
+				}
+			}
+			cn.setAutoCommit(false);
+			pst = cn.prepareStatement(
+					"update Libros set precio = \"" + (precioPorPag * pag1) + "\"" + " where ISBN = \"" + isbn1 + "\"");
+			pst.executeUpdate();
+			st = cn.createStatement();
+			st.executeUpdate(
+					"update Libros set precio = \"" + (precioPorPag * pag2) + "\"" + " where ISBN = \"" + isbn2 + "\"");
+			cn.commit();
+			liberar();
+		} catch (SQLException sqle) {
+			Utilidades.printSQLException(sqle);
+			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			try {
+				cn.setAutoCommit(true);
+			} catch (SQLException e) {
+				Utilidades.printSQLException(e);
+				throw new AccesoDatosException("Ocurrio un error");
+			}
+		}
+	}
+
+	public void añadirPaginas(String isbn, int numPag, float precioPorPag) throws AccesoDatosException {
+		try {
+			boolean salir = false;
+			int pagViejas = 0;
+			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			rs = pst.executeQuery();
+			cn.setAutoCommit(false);
+			while (rs.next() && !salir) {
+				String ISBN = rs.getString("ISBN");
+				if (ISBN.equalsIgnoreCase(isbn)) {
+					pagViejas = rs.getInt("paginas");
+					rs.updateInt("paginas", numPag + pagViejas);
+					rs.updateFloat("precio", precioPorPag * (numPag + pagViejas));
+					rs.updateRow();
+					salir = true;
+				}
+			}
+			cn.commit();
+			liberar();
+		} catch (SQLException sqle) {
+			Utilidades.printSQLException(sqle);
+			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			try {
+				cn.setAutoCommit(true);
+			} catch (SQLException e) {
+				Utilidades.printSQLException(e);
+				throw new AccesoDatosException("Ocurrio un error");
+			}
+		}
+	}
+
+	public void duplicarLibro(String isbn1, String isbn2) throws AccesoDatosException {
+		try {
+			boolean salir = false;
+			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			rs = pst.executeQuery();
+			cn.setAutoCommit(false);
+			String editorial = null;
+			String titulo = null;
+			String autor = null;
+			int copias = 0;
+			int paginas = 0;
+			float precio = 0;			
+			while (rs.next()&& !salir) {
+				if (rs.getString("ISBN").equalsIgnoreCase(isbn1)) {
+					titulo = rs.getString("titulo");
+					autor = rs.getString("autor");
+					editorial = rs.getString("editorial");
+					paginas = rs.getInt("paginas");
+					copias = rs.getInt("copias");
+					precio = rs.getFloat("precio");					
+		            salir = true;
+				}	            
+				
+			}
+			rs.moveToInsertRow();
+			rs.updateString("ISBN", isbn2);
+			rs.updateString("titulo", titulo);
+			rs.updateString("autor", autor);
+			rs.updateString("editorial", editorial);
+			rs.updateInt("paginas", paginas);
+			rs.updateInt("copias", copias);
+			rs.updateFloat("precio", precio);
+            rs.insertRow();
+			cn.commit();
+			liberar();
+		} catch (SQLException sqle) {
+			Utilidades.printSQLException(sqle);
+			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			try {
+				cn.setAutoCommit(true);
+			} catch (SQLException e) {
+				Utilidades.printSQLException(e);
+				throw new AccesoDatosException("Ocurrio un error");
+			}
 		}
 	}
 }

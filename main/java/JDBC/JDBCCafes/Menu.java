@@ -24,7 +24,10 @@ public class Menu {
 				+ "6-Ver Catalogo Inverso\n"
 				+ "7-Actualizar Copias (Varios)\n"
 				+ "8-Mostrar filas introducidas\n"
-				+ "9-Actualizar precio por pagina de uno o varios libros\n"
-				+ "10-Salir\n");
+				+ "9-Actualizar precio de uno o varios libros\n"
+				+ "10-Actualizar precio de dos libros\n"
+				+ "11-Actualizar nº de páginas y precio de un libro\n"
+				+ "12-Duplicar libro\n"
+				+ "13-Salir\n");
 	}
 }

@@ -50,60 +50,96 @@ public class InteraccionLib {
 		miLibro.verCatalogo();
 		;
 	}
-	
+
 	public static void obtener(Libros miLibro) throws AccesoDatosException {
-		String [] campos = miLibro.getCamposLibro();
-		for(int i = 0; i<campos.length;i++){
-			System.out.print(campos[i]+",");
+		String[] campos = miLibro.getCamposLibro();
+		for (int i = 0; i < campos.length; i++) {
+			System.out.print(campos[i] + ",");
 		}
 	}
-	
+
 	public static void VerInverso(Libros miLibro) throws AccesoDatosException {
 		miLibro.verCatalogoInverso();
 	}
-	
+
 	public static void updateVarios(Libros miLibro) throws AccesoDatosException {
 		Scanner lc = new Scanner(System.in);
 		System.out.println("¿De cuantos libros distintos desea actualizar el número de copias?");
-		int num = lc.nextInt();		
-		HashMap <String,Integer> hashCopias = new HashMap <String,Integer>();
-		for(int i=0;i<num;i++){
+		int num = lc.nextInt();
+		HashMap<String, Integer> hashCopias = new HashMap<String, Integer>();
+		for (int i = 0; i < num; i++) {
 			System.out.println("Introduzca el ISBN del libro cuyas copias desea actualizar:");
 			String ISBN = lc.next();
 			System.out.println("Introduzca el nuevo total de copias del libro cuyos datos desea actualizar:");
 			int copias = lc.nextInt();
 			hashCopias.put(ISBN, copias);
-		}		
+		}
 		miLibro.actualizarCopias(hashCopias);
 		miLibro.verCatalogo();
 	}
-	
+
 	public static void mostrarFilas(Libros miLibro) throws AccesoDatosException {
 		Scanner lc = new Scanner(System.in);
 		System.out.println("¿Cuantas filas distintas quiere mostrar?");
-		int num = lc.nextInt();		
-		ArrayList <Integer> arrayFilas = new ArrayList <Integer>();
-		for(int i=0;i<num;i++){
+		int num = lc.nextInt();
+		ArrayList<Integer> arrayFilas = new ArrayList<Integer>();
+		for (int i = 0; i < num; i++) {
 			System.out.println("Introduzca el nº de fila cuyos datos desea visualizar:");
 			int num2 = lc.nextInt();
 			arrayFilas.add(Integer.valueOf(num2));
-		}		
+		}
 		miLibro.mostrarFilas(arrayFilas);
 	}
-	
+
 	public static void updatePrecioPag(Libros miLibro) throws AccesoDatosException {
 		Scanner lc = new Scanner(System.in);
 		System.out.println("¿De cuantos libros distintos desea actualizar el precio por pagina?");
-		int num = lc.nextInt();		
-		HashMap <String,Float> hashPrecios = new HashMap <String,Float>();
-		for(int i=0;i<num;i++){
-			System.out.println("Introduzca el ISBN del libro cuyas copias desea actualizar:");
+		int num = lc.nextInt();
+		HashMap<String, Float> hashPrecios = new HashMap<String, Float>();
+		for (int i = 0; i < num; i++) {
+			System.out.println("Introduzca el ISBN del libro cuyo precio quiere actualizar:");
 			String ISBN = lc.next();
 			System.out.println("Introduzca el precio por pagina del libro cuyos datos desea actualizar:");
 			float precio = lc.nextFloat();
 			hashPrecios.put(ISBN, precio);
-		}		
+		}
 		miLibro.actualizarPrecioPag(hashPrecios);
 		miLibro.verCatalogo();
 	}
+
+	public static void transaccionPrecio(Libros miLibro) throws AccesoDatosException {
+		Scanner lc = new Scanner(System.in);
+		System.out.println("Introduzca el ISBN del primer libro cuyo precio quiere actualizar:");
+		String isbn1 = lc.next();
+		System.out.println("Introduzca el ISBN del segundo libro cuyo precio quiere actualizar:");
+		String isbn2 = lc.next();
+		System.out.println("Introduzca el precio por pagina del libro cuyos datos desea actualizar:");
+		float precio = lc.nextFloat();
+		miLibro.transaccionPrecio(isbn1, isbn2, precio);
+		miLibro.verCatalogo();
+	}
+
+	public static void añadirPag(Libros miLibro) throws AccesoDatosException {
+		Scanner lc = new Scanner(System.in);
+		System.out.println("Introduzca el ISBN del libro cuyas paginas quiere actualizar:");
+		String isbn = lc.next();
+		System.out.println("Introduzca el nº de páginas que desea añadir al libro que quiere actualizar:");
+		int pag = lc.nextInt();
+		System.out.println("Introduzca el precio por pagina del libro cuyos datos desea actualizar:");
+		float precio = lc.nextFloat();
+		miLibro.añadirPaginas(isbn, pag, precio);
+		miLibro.verCatalogo();
+	}
+	
+
+	public static void duplicarLibro(Libros miLibro) throws AccesoDatosException {
+		Scanner lc = new Scanner(System.in);
+		System.out.println("Introduzca el ISBN del libro que quiere duplicar:");
+		String isbn1 = lc.next();
+		System.out.println("Introduzca el ISBN del nuevo libro:");
+		String isbn2 = lc.next();
+		miLibro.duplicarLibro(isbn1, isbn2);
+		miLibro.verCatalogo();
+	}
+
 }

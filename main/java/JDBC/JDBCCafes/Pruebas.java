@@ -54,7 +54,7 @@ public class Pruebas {
 				try {
 					Libros miLibro = new Libros();
 					int opcionLib = 0;
-					while (opcionLib != 10) {
+					while (opcionLib != 13) {
 						System.out.println("\n¿Qué desea hacer?");
 						Menu.menuLibros();;
 						switch (lc.nextInt()) {
@@ -89,11 +89,21 @@ public class Pruebas {
 							InteraccionLib.updatePrecioPag(miLibro);
 							break;
 						case 10:
-							opcionLib = 10;
+							InteraccionLib.transaccionPrecio(miLibro);
+							break;
+						case 11:
+							InteraccionLib.añadirPag(miLibro);
+							miLibro.cerrar();
+							break;
+						case 12:
+							InteraccionLib.duplicarLibro(miLibro);
+							break;
+						case 13:
+							opcionLib = 13;
 							miLibro.cerrar();
 							break;
 						default:
-							System.out.println("introduzca un nº del 1 al 9");
+							System.out.println("introduzca un nº del 1 al 13");
 						}
 					}
 				} catch (MercadoException ex) {
