@@ -23,9 +23,9 @@ public class InteraccionLib {
 		int paginas = lc.nextInt();
 		System.out.println("Introduzca el total de copias del libro cuyos datos desea añadir:");
 		int copias = lc.nextInt();
-		System.out.println(("INSERT INTO libros VALUES (\"" + ISBN + "\"" + ",\"" + titulo + "\"" + ",\"" + autor + "\""
-				+ ",\"" + editorial + "\"" + ",\"" + paginas + "\",\"" + copias + "\")"));
-		miLibro.añadirLibro(ISBN, titulo, autor, editorial, paginas, copias);
+		System.out.println("Introduzca el precio del libro cuyos datos desea añadir:");
+		float precio = lc.nextInt();
+		miLibro.añadirLibro(ISBN, titulo, autor, editorial, paginas, copias,precio);
 		miLibro.verCatalogo();
 	}
 

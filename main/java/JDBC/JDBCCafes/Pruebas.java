@@ -5,6 +5,7 @@ import java.util.Scanner;
 import ClasesPrincipales.Cafes;
 import ClasesPrincipales.Libros;
 import exceptions.MercadoException;
+import utils.Utilidades;
 
 public class Pruebas {
 
@@ -40,7 +41,7 @@ public class Pruebas {
 							break;
 						case 6:
 							opcionCaf = 6;
-							miCafe.cerrar();
+							Utilidades.closePool(miCafe.getPool());
 							break;
 						default:
 							System.out.println("introduzca un nº del 1 al 6");
@@ -93,14 +94,13 @@ public class Pruebas {
 							break;
 						case 11:
 							InteraccionLib.añadirPag(miLibro);
-							miLibro.cerrar();
 							break;
 						case 12:
 							InteraccionLib.duplicarLibro(miLibro);
 							break;
 						case 13:
 							opcionLib = 13;
-							miLibro.cerrar();
+							Utilidades.closePool(miLibro.getPool());
 							break;
 						default:
 							System.out.println("introduzca un nº del 1 al 13");

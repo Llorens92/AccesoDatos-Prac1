@@ -7,19 +7,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import exceptions.AccesoDatosException;
 import utils.Utilidades;
 
 public class Cafes {
-	
 
-	private static final String PROPERTIES_FILE="src\\main\\resources\\mysql-properties.xml";
+	private static final String PROPERTIES_FILE = "src\\main\\resources\\mysql-properties.xml";
 	// Consultas a realizar en BD
 	private static final String SELECT_CAFES_QUERY = "select CAF_NOMBRE, PROV_ID, PRECIO, VENTAS, TOTAL from CAFES";
 	// En una consulta parametrizada ponemos interrogaciones en los valores que
 	// a�n desconocemos
 	private static final String UPDATE_VENTAS_CAFE = "update CAFES set VENTAS = ? where CAF_NOMBRE = ?";
 
+	private BasicDataSource pool;
 	private Connection cn;
 	private ResultSet rs;
 	private Statement st;
@@ -27,7 +29,7 @@ public class Cafes {
 
 	public Cafes() throws AccesoDatosException {
 		try {
-			cn = new Utilidades(PROPERTIES_FILE).getConnection();
+			this.pool = new Utilidades(PROPERTIES_FILE).getPool();
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
@@ -39,12 +41,6 @@ public class Cafes {
 			st = null;
 			pst = null;
 
-		}
-	}
-
-	public void cerrar() {
-		if (cn != null) {
-			Utilidades.closeConnection(cn);
 		}
 	}
 
@@ -68,11 +64,12 @@ public class Cafes {
 	 * Metodo que muestra por pantalla los datos de la tabla cafes
 	 * 
 	 * @param con
-	 * @throws AccesoDatosException 
+	 * @throws AccesoDatosException
 	 * @throws SQLException
 	 */
 	public void verTabla() throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			// Creaci�n de la sentencia
 			pst = cn.prepareStatement(SELECT_CAFES_QUERY);
 			rs = pst.executeQuery();
@@ -93,6 +90,15 @@ public class Cafes {
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
 			// En una aplicaci�n real, escribo en el log, no delego porque
 			// es error al liberar recursos
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
@@ -101,10 +107,11 @@ public class Cafes {
 	 * 
 	 * @param cafe
 	 * @param ventas
-	 * @throws AccesoDatosException 
+	 * @throws AccesoDatosException
 	 */
 	public void actualizarVentasCafe(String cafe, int ventas) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(UPDATE_VENTAS_CAFE);
 			pst.executeUpdate();
 			liberar();
@@ -115,10 +122,10 @@ public class Cafes {
 	}
 
 	public void BuscarCafe(String cafe) throws AccesoDatosException {
-		try {
+		try {		
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement("Select * from cafes where caf_nombre=\"" + cafe + "\"");
 			rs = pst.executeQuery();
-
 			while (rs.next()) {
 				int supplierID = rs.getInt("PROV_ID");
 				float PRECIO = rs.getFloat("PRECIO");
@@ -132,22 +139,42 @@ public class Cafes {
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void BorrarCafe(String cafe) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement("DELETE FROM cafes WHERE CAF_NOMBRE=\"" + cafe + "\"");
 			pst.executeUpdate();
 			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void InsertarCafe(String nom, int ID, float precio, int ventas, int total) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement("INSERT INTO cafes VALUES (\"" + nom + "\"" + ",\"" + ID + "\"" + ",\"" + precio
 					+ "\"" + ",\"" + ventas + "\"" + ",\"" + total + "\")");
 			pst.executeUpdate();
@@ -155,11 +182,21 @@ public class Cafes {
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void cafesProveedor(int id_prov) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(
 					"SELECT P.*, C.* FROM CAFES C JOIN PROVEEDORES P ON C.PROV_ID = P.PROV_ID AND C.prov_id=\""
 							+ id_prov + "\"");
@@ -190,6 +227,19 @@ public class Cafes {
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
+	}
+	
+	public BasicDataSource getPool(){
+		return this.pool;
 	}
 }

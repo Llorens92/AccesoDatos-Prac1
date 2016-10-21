@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.ResultSetMetaData;
 
 import exceptions.AccesoDatosException;
@@ -23,6 +26,7 @@ public class Libros {
 
 	private static final String SELECT_CAMPOS_QUERY = "SELECT * FROM LIBROS LIMIT 1";
 
+	private BasicDataSource pool;
 	private Connection cn;
 	private ResultSet rs;
 	private Statement st;
@@ -30,7 +34,7 @@ public class Libros {
 
 	public Libros() throws AccesoDatosException {
 		try {
-			cn = new Utilidades(PROPERTIES_FILE).getConnection();
+			this.pool = new Utilidades(PROPERTIES_FILE).getPool();
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
@@ -46,7 +50,6 @@ public class Libros {
 	}
 
 	public String[] getCamposLibro() throws AccesoDatosException {
-
 		/* Sentencia sql con parámetros de entrada */
 		pst = null;
 		/* Conjunto de Resultados a obtener de la sentencia sql */
@@ -56,7 +59,7 @@ public class Libros {
 		String[] campos = null;
 
 		try {
-
+			this.cn = pool.getConnection();
 			// Solicitamos a la conexion un objeto stmt para nuestra consulta
 			pst = cn.prepareStatement(SELECT_CAMPOS_QUERY);
 
@@ -77,60 +80,64 @@ public class Libros {
 			throw new AccesoDatosException("Ocurrió un error al acceder a los datos");
 
 		} finally {
-			liberar();
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 
 		return campos;
 	}
 
-	public void cerrar() {
-		if (cn != null) {
-			Utilidades.closeConnection(cn);
-		}
-	}
-
-	private void liberar() {
-		try {
-			if (rs != null) {
-				rs.close();
-			}
-			if (st != null) {
-				st.close();
-			}
-			if (pst != null) {
-				pst.close();
-			}
-		} catch (SQLException sqle) {
-			Utilidades.printSQLException(sqle);
-		}
-	}
-
-	public void añadirLibro(int isbn, String titulo, String autor, String editorial, int paginas, int copias)
+	public void añadirLibro(int isbn, String titulo, String autor, String editorial, int paginas, int copias, float precio)
 			throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement("INSERT INTO libros VALUES (\"" + isbn + "\"" + ",\"" + titulo + "\"" + ",\""
-					+ autor + "\"" + ",\"" + editorial + "\"" + ",\"" + paginas + "\",\"" + copias + "\")");
+					+ autor + "\"" + ",\"" + editorial + "\"" + ",\"" + paginas + "\",\"" + copias + "\",\"" + precio +"\")");
 			pst.executeUpdate();
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void BorrarLibro(String isbn) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement("DELETE FROM Libros WHERE isbn=\"" + isbn + "\"");
 			pst.executeUpdate();
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void verCatalogo() throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY);
 			rs = pst.executeQuery();
 			while (rs.next()) {
@@ -144,27 +151,45 @@ public class Libros {
 				System.out.println(ISBN + ", " + titulo + ", " + autor + ", " + editorial + ", " + paginas + ", "
 						+ copias + ", " + precio);
 			}
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void actualizarCopias(String isbn, int copias) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(
 					"update Libros set Copias = \"" + copias + "\"" + " where ISBN = \"" + isbn + "\"");
 			pst.executeUpdate();
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void actualizarCopias(HashMap<String, Integer> HashCopias) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			Iterator<String> isbns = HashCopias.keySet().iterator();
@@ -181,15 +206,24 @@ public class Libros {
 				}
 				rs.beforeFirst();
 			}
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void verCatalogoInverso() throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			rs.afterLast();
@@ -203,15 +237,24 @@ public class Libros {
 				System.out.println(
 						ISBN + ", " + titulo + ", " + autor + ", " + editorial + ", " + paginas + ", " + copias);
 			}
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void mostrarFilas(ArrayList<Integer> listaFilas) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			Iterator<Integer> filas = listaFilas.iterator();
@@ -227,15 +270,24 @@ public class Libros {
 				System.out.println(
 						ISBN + ", " + titulo + ", " + autor + ", " + editorial + ", " + paginas + ", " + copias);
 			}
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
 	public void actualizarPrecioPag(HashMap<String, Float> HashPrecio) throws AccesoDatosException {
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			Iterator<String> isbns = HashPrecio.keySet().iterator();
@@ -252,10 +304,18 @@ public class Libros {
 				}
 				rs.beforeFirst();
 			}
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
 		}
 	}
 
@@ -263,6 +323,7 @@ public class Libros {
 		int pag1 = 0;
 		int pag2 = 0;
 		try {
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			while (rs.next()) {
@@ -282,13 +343,15 @@ public class Libros {
 			st.executeUpdate(
 					"update Libros set precio = \"" + (precioPorPag * pag2) + "\"" + " where ISBN = \"" + isbn2 + "\"");
 			cn.commit();
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
 		} finally {
 			try {
 				cn.setAutoCommit(true);
+				if (cn != null) {
+					cn.close();
+				}
 			} catch (SQLException e) {
 				Utilidades.printSQLException(e);
 				throw new AccesoDatosException("Ocurrio un error");
@@ -300,6 +363,7 @@ public class Libros {
 		try {
 			boolean salir = false;
 			int pagViejas = 0;
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			cn.setAutoCommit(false);
@@ -314,13 +378,15 @@ public class Libros {
 				}
 			}
 			cn.commit();
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
-		} finally {
+		}finally {
 			try {
 				cn.setAutoCommit(true);
+				if (cn != null) {
+					cn.close();
+				}
 			} catch (SQLException e) {
 				Utilidades.printSQLException(e);
 				throw new AccesoDatosException("Ocurrio un error");
@@ -331,6 +397,7 @@ public class Libros {
 	public void duplicarLibro(String isbn1, String isbn2) throws AccesoDatosException {
 		try {
 			boolean salir = false;
+			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(SELECT_LIBROS_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = pst.executeQuery();
 			cn.setAutoCommit(false);
@@ -339,18 +406,18 @@ public class Libros {
 			String autor = null;
 			int copias = 0;
 			int paginas = 0;
-			float precio = 0;			
-			while (rs.next()&& !salir) {
+			float precio = 0;
+			while (rs.next() && !salir) {
 				if (rs.getString("ISBN").equalsIgnoreCase(isbn1)) {
 					titulo = rs.getString("titulo");
 					autor = rs.getString("autor");
 					editorial = rs.getString("editorial");
 					paginas = rs.getInt("paginas");
 					copias = rs.getInt("copias");
-					precio = rs.getFloat("precio");					
-		            salir = true;
-				}	            
-				
+					precio = rs.getFloat("precio");
+					salir = true;
+				}
+
 			}
 			rs.moveToInsertRow();
 			rs.updateString("ISBN", isbn2);
@@ -360,19 +427,25 @@ public class Libros {
 			rs.updateInt("paginas", paginas);
 			rs.updateInt("copias", copias);
 			rs.updateFloat("precio", precio);
-            rs.insertRow();
+			rs.insertRow();
 			cn.commit();
-			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
-		} finally {
+		}finally {
 			try {
 				cn.setAutoCommit(true);
+				if (cn != null) {
+					cn.close();
+				}
 			} catch (SQLException e) {
 				Utilidades.printSQLException(e);
 				throw new AccesoDatosException("Ocurrio un error");
 			}
 		}
+	}
+
+	public BasicDataSource getPool(){
+		return this.pool;
 	}
 }

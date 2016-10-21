@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 /**
  *  @description Clase que establece una conexi�n a BD utilizando la clase DriverManager. lee los datos de u archivo de propiedades
  */
@@ -28,8 +30,6 @@ public class Utilidades {
 	private int portNumber;
 	private Properties prop;
 	
-	private static final String PROPERTIES_FILE="src\\main\\resources\\mysql-properties.xml";
-
 	public Utilidades(String PROPERTIES_FILE)
 			throws FileNotFoundException, IOException,
 			InvalidPropertiesFormatException {
@@ -67,52 +67,32 @@ public class Utilidades {
 
 	}
 
-	/**
-	 * Conexion a Base de Datos
-	 * 
-	 * @return
-	 * @throws SQLException
-	 */
-	public Connection getConnection() throws SQLException {
+	public BasicDataSource getPool() throws SQLException {
+		BasicDataSource basicDataSource = new BasicDataSource();
+		
+		basicDataSource.setDriverClassName(driver);
+		basicDataSource.setUsername(this.userName);
+		basicDataSource.setPassword(this.password);
+		basicDataSource.setUrl("jdbc:" + this.dbms + "://"
+			+ this.serverName + ":" + this.portNumber + "/" + this.dbName);
+		
+		// Opcional, para fijar el tamaño. Por defecto es 10
+		basicDataSource.setInitialSize(4);
 
-		Connection conn = null;
-		Properties connectionProps = new Properties();
-		connectionProps.put("user", this.userName);
-		connectionProps.put("password", this.password);
-
-		if (this.dbms.equals("mysql")) {
-			/* Solicito a DriverManager una conexi�n con la base de datos */
-			/*
-			 * Para identificar el controldador a usar se le proporciona una
-			 * URL, si no lo encuentra lanza SQLException
-			 */
-			/* formato de URL: jdbc:[host][:port]/[database] */
-			/*
-			 * La URL var�a seg�n el gestor de BD,
-			 * jdbc:mysql://127.0.0.1:3306/libros,
-			 * jdbc:oracle:thin:@192.168.239.142:1521:libros
-			 */
-			conn = DriverManager.getConnection("jdbc:" + this.dbms + "://"
-					+ this.serverName + ":" + this.portNumber + "/" + this.dbName,
-					connectionProps);
-		} else if (this.dbms.equals("derby")) {
-			conn = DriverManager.getConnection("jdbc:" + this.dbms + ":"
-					+ this.dbName + ";create=true", connectionProps);
-		}
-		System.out.println("Connectado a BD");
-		return conn;
+		// Opcional. Sentencia SQL que le puede servir a BasicDataSource
+		// para comprobar que la conexion es correcta.
+		basicDataSource.setValidationQuery("select 1");
+		
+		System.out.println("Pool creado");
+		return basicDataSource;
 	}
 
-	/**
-	 * Cierre de conexi�n a BD
-	 * @param connArg
-	 */
-	public static void closeConnection(Connection connArg) {
+	public static void closePool(BasicDataSource pool) {
 		System.out.println("Releasing all open resources ...");
 		try {
-			if (connArg != null) {
-				connArg.close();
-				connArg = null;
+			if (pool != null) {
+				pool.close();
+				pool = null;
 			}
 		} catch (SQLException sqle) {
 			System.err.println(sqle);
