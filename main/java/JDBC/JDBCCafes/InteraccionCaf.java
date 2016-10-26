@@ -43,4 +43,23 @@ public class InteraccionCaf {
 		System.out.println("Introduzca el id del proveedor cuyos datos desea consultar:");
 		miCafe.cafesProveedor(lc.nextInt());
 	}
+
+	public static void transferencia (Cafes miCafe) throws AccesoDatosException{
+		Scanner lc = new Scanner(System.in);
+		System.out.println("Introduzca el nombre del café cuyas ventas desea traspasar a otro:");
+		String nom = lc.next();
+		System.out.println("Introduzca el nombre del café a cuyas ventas quiera sumar las del anterior:");
+		String nom2 = lc.next();
+		miCafe.transferencia(nom, nom2);
+	}
+
+	public static void updateVentas (Cafes miCafe) throws AccesoDatosException{
+		Scanner lc = new Scanner(System.in);
+		System.out.println("Introduzca el nombre del café cuyas ventas desea actualizar:");
+		String nom = lc.next();
+		System.out.println("Introduzca las ventas del café:");
+		int ventas = lc.nextInt();
+		miCafe.actualizarVentasCafe(nom, ventas);
+	}
+	
 }

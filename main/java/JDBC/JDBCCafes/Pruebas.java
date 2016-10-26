@@ -20,7 +20,7 @@ public class Pruebas {
 				try {
 					Cafes miCafe = new Cafes();
 					int opcionCaf = 0;
-					while (opcionCaf != 6) {
+					while (opcionCaf != 8) {
 						System.out.println("\n¿Qué desea hacer?");
 						Menu.menuCafes();
 						switch (lc.nextInt()) {
@@ -37,18 +37,25 @@ public class Pruebas {
 							InteraccionCaf.Borrar(miCafe);
 							break;
 						case 5:
-							InteraccionCaf.BuscarDatosProv(miCafe);
+							InteraccionCaf.updateVentas(miCafe);;
 							break;
 						case 6:
-							opcionCaf = 6;
+							InteraccionCaf.BuscarDatosProv(miCafe);
+							break;
+						case 7:
+							InteraccionCaf.transferencia(miCafe);
+							break;
+						case 8:
+							opcionCaf = 8;
 							Utilidades.closePool(miCafe.getPool());
 							break;
 						default:
-							System.out.println("introduzca un nº del 1 al 6");
+							System.out.println("introduzca un nº del 1 al 8");
 						}
 					}
 				} catch (MercadoException ex) {
 					System.out.println("Lo sentimos ocurrio un error en la apliacion" + ex.getMessage());
+					Utilidades.closePool(miCafe.getPool());
 				}
 				break;
 			case 2:

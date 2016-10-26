@@ -12,8 +12,10 @@ public class Menu {
 				"2-Buscar Cafe\n"
 				+ "3-Insertar Cafe\n"
 				+ "4-Borrar Cafe\n"
-				+ "5-Consultar Cafes de un proveedor (Introducir ID)\n"
-				+ "6-Salir\n");
+				+ "5-Actualizar ventas Cafe\n"
+				+ "6-Consultar Cafes de un proveedor (Introducir ID)\n"
+				+ "7-Transferencia de ventas de un cafe a otro\n"
+				+ "8-Salir\n");
 	}
 	public static void menuLibros(){
 		System.out.println("1-Añadir Libro.\n"+

@@ -48,7 +48,7 @@ public class Libros {
 
 		}
 	}
-
+	
 	public String[] getCamposLibro() throws AccesoDatosException {
 		/* Sentencia sql con parámetros de entrada */
 		pst = null;

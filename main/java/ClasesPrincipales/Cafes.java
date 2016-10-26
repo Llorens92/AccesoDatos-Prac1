@@ -238,6 +238,47 @@ public class Cafes {
 			}
 		}
 	}
+	public void transferencia(String nom1, String nom2) throws AccesoDatosException {
+		try {
+			this.cn = pool.getConnection();
+			cn.setAutoCommit(false);
+			boolean encontrado = false;
+			boolean salir = false;
+			int ventas1 = 0;
+			pst = cn.prepareStatement(SELECT_CAFES_QUERY, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			rs = pst.executeQuery();
+			while (rs.next() && !salir) {
+				if (nom1.equalsIgnoreCase(rs.getString("caf_nombre"))) {
+					ventas1 = rs.getInt("Ventas");
+					rs.updateInt("ventas", 0);
+					rs.updateRow();
+					rs.absolute(1);
+					encontrado = true;
+				}
+				if (encontrado && nom2.equalsIgnoreCase(rs.getString("caf_nombre"))) {
+					rs.updateInt("ventas", ventas1 + rs.getInt("Ventas"));
+					rs.updateRow();
+					salir = true;
+					
+				}
+			}			
+			cn.commit();
+			liberar();
+		} catch (SQLException sqle) {
+			Utilidades.printSQLException(sqle);
+			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+		} finally {
+			if (cn != null) {
+				try {
+					cn.setAutoCommit(true);
+					cn.close();
+				} catch (SQLException e) {
+					Utilidades.printSQLException(e);
+					throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
+				}
+			}
+		}
+	}
 	
 	public BasicDataSource getPool(){
 		return this.pool;
