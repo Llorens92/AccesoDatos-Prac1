@@ -47,7 +47,7 @@ public class Pruebas {
 							break;
 						case 8:
 							opcionCaf = 8;
-							Utilidades.closePool(miCafe.getPool());
+							miCafe.cerrar();
 							break;
 						default:
 							System.out.println("introduzca un nº del 1 al 8");
@@ -106,7 +106,7 @@ public class Pruebas {
 							break;
 						case 13:
 							opcionLib = 13;
-							Utilidades.closePool(miLibro.getPool());
+							miLibro.cerrar();
 							break;
 						default:
 							System.out.println("introduzca un nº del 1 al 13");

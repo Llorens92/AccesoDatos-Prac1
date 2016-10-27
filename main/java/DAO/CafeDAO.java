@@ -1,15 +1,15 @@
 package DAO;
 
 
-import org.apache.commons.dbcp2.BasicDataSource;
+
+import java.util.List;
 
 import logica.AccesoDatosException;
+import modelo.Cafe;
 
 public interface CafeDAO {
-	
-	public void liberar() ;
 
-	public void verTabla() throws AccesoDatosException;
+	public List<Cafe> verTabla() throws AccesoDatosException;
 
 	public void actualizarVentasCafe(String cafe, int ventas) throws AccesoDatosException;
 
@@ -23,5 +23,5 @@ public interface CafeDAO {
 	
 	public void transferencia(String nom1, String nom2) throws AccesoDatosException;
 	
-	public BasicDataSource getPool();
+	public void cerrar();
 }

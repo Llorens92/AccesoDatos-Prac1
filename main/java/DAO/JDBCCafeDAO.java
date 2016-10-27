@@ -6,21 +6,30 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import DAO.Utilidades;
 import logica.AccesoDatosException;
+import modelo.Cafe;
 
 public class JDBCCafeDAO implements CafeDAO{
 
 	private static final String PROPERTIES_FILE = "src\\main\\resources\\mysql-properties.xml";
-	// Consultas a realizar en BD
+	
 	private static final String SELECT_CAFES_QUERY = "select CAF_NOMBRE, PROV_ID, PRECIO, VENTAS, TOTAL from CAFES";
-	// En una consulta parametrizada ponemos interrogaciones en los valores que
-	// a�n desconocemos
+	
 	private static final String UPDATE_VENTAS_CAFE = "update CAFES set VENTAS = ? where CAF_NOMBRE = ?";
-
+	
+	private static final String BUSCAR_CAFE = "Select * from cafes where caf_nombre=?";
+	
+	private static final String BORRAR_CAFE = "DELETE FROM cafes WHERE CAF_NOMBRE=?";
+	
+	private static final String INSERTAR_CAFE = "INSERT INTO cafes VALUES (?,?,?,?,?)";
+	
+	private static final String CONSULTAR_MISMOPROV = 	"SELECT P.*, C.* FROM CAFES C JOIN PROVEEDORES P ON C.PROV_ID = P.PROV_ID AND C.prov_id=?";
 	private BasicDataSource pool;
 	private Connection cn;
 	private ResultSet rs;
@@ -43,7 +52,11 @@ public class JDBCCafeDAO implements CafeDAO{
 
 		}
 	}
-
+	
+	public void cerrar(){
+		Utilidades.closePool(this.pool);		
+	}
+	
 	private void liberar() {
 		try {
 			if (rs != null) {
@@ -67,24 +80,17 @@ public class JDBCCafeDAO implements CafeDAO{
 	 * @throws AccesoDatosException
 	 * @throws SQLException
 	 */
-	public void verTabla() throws AccesoDatosException {
+	public List<Cafe> verTabla() throws AccesoDatosException {
 		try {
 			this.cn = pool.getConnection();
-			// Creaci�n de la sentencia
 			pst = cn.prepareStatement(SELECT_CAFES_QUERY);
 			rs = pst.executeQuery();
-			// Ejecuci�n de la consulta y obtenci�n de resultados en un
-			// ResultSet
-			// Recuperaci�n de los datos del ResultSet
+			List<Cafe> cafes = new ArrayList<Cafe>();
 			while (rs.next()) {
-				String coffeeName = rs.getString("CAF_NOMBRE");
-				int supplierID = rs.getInt("PROV_ID");
-				float PRECIO = rs.getFloat("PRECIO");
-				int VENTAS = rs.getInt("VENTAS");
-				int total = rs.getInt("TOTAL");
-				System.out.println(coffeeName + ", " + supplierID + ", " + PRECIO + ", " + VENTAS + ", " + total);
+				cafes.add(new Cafe(rs.getString("CAF_NOMBRE"),rs.getInt("PROV_ID"),rs.getFloat("PRECIO"),rs.getInt("VENTAS"),rs.getInt("TOTAL"))); 	
 			}
 			liberar();
+			return cafes;
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
 			throw new AccesoDatosException("Ocurrio un error al acceder a los datos");
@@ -109,10 +115,12 @@ public class JDBCCafeDAO implements CafeDAO{
 	 * @param ventas
 	 * @throws AccesoDatosException
 	 */
-	public void actualizarVentasCafe(String cafe, int ventas) throws AccesoDatosException {
+	public void actualizarVentasCafe(Cafe cafe) throws AccesoDatosException {
 		try {
 			this.cn = pool.getConnection();
 			pst = cn.prepareStatement(UPDATE_VENTAS_CAFE);
+			pst.setInt(1, cafe.getVENTAS());
+			pst.setString(2, cafe.getCAF_NOMBRE());
 			pst.executeUpdate();
 			liberar();
 		} catch (SQLException sqle) {
@@ -121,20 +129,12 @@ public class JDBCCafeDAO implements CafeDAO{
 		}
 	}
 
-	public void BuscarCafe(String cafe) throws AccesoDatosException {
+	public void BuscarCafe(Cafe cafe) throws AccesoDatosException {
 		try {		
 			this.cn = pool.getConnection();
-			pst = cn.prepareStatement("Select * from cafes where caf_nombre=\"" + cafe + "\"");
-			rs = pst.executeQuery();
-			while (rs.next()) {
-				int supplierID = rs.getInt("PROV_ID");
-				float PRECIO = rs.getFloat("PRECIO");
-				int VENTAS = rs.getInt("VENTAS");
-				int total = rs.getInt("TOTAL");
-				System.out.println("Los datos del café " + cafe + " son:");
-				System.out
-						.println("ID " + supplierID + ", Precio " + PRECIO + ", Ventas " + VENTAS + ", Total " + total);
-			}
+			pst = cn.prepareStatement(BUSCAR_CAFE);
+			pst.setString(1, cafe.getCAF_NOMBRE());
+			pst.executeQuery();
 			liberar();
 		} catch (SQLException sqle) {
 			Utilidades.printSQLException(sqle);
@@ -151,10 +151,11 @@ public class JDBCCafeDAO implements CafeDAO{
 		}
 	}
 
-	public void BorrarCafe(String cafe) throws AccesoDatosException {
+	public void BorrarCafe(Cafe cafe) throws AccesoDatosException {
 		try {
 			this.cn = pool.getConnection();
-			pst = cn.prepareStatement("DELETE FROM cafes WHERE CAF_NOMBRE=\"" + cafe + "\"");
+			pst = cn.prepareStatement(BORRAR_CAFE);
+			pst.setString(1, cafe.getCAF_NOMBRE());
 			pst.executeUpdate();
 			liberar();
 		} catch (SQLException sqle) {
@@ -172,11 +173,15 @@ public class JDBCCafeDAO implements CafeDAO{
 		}
 	}
 
-	public void InsertarCafe(String nom, int ID, float precio, int ventas, int total) throws AccesoDatosException {
+	public void InsertarCafe(Cafe cafe) throws AccesoDatosException {
 		try {
 			this.cn = pool.getConnection();
-			pst = cn.prepareStatement("INSERT INTO cafes VALUES (\"" + nom + "\"" + ",\"" + ID + "\"" + ",\"" + precio
-					+ "\"" + ",\"" + ventas + "\"" + ",\"" + total + "\")");
+			pst = cn.prepareStatement(INSERTAR_CAFE);
+			pst.setString(1, cafe.getCAF_NOMBRE());
+			pst.setInt(2, cafe.getPROV_ID());
+			pst.setFloat(3, cafe.getPRECIO());
+			pst.setInt(4, cafe.getVENTAS());
+			pst.setInt(5, cafe.getTOTAL());
 			pst.executeUpdate();
 			liberar();
 		} catch (SQLException sqle) {
@@ -197,9 +202,8 @@ public class JDBCCafeDAO implements CafeDAO{
 	public void cafesProveedor(int id_prov) throws AccesoDatosException {
 		try {
 			this.cn = pool.getConnection();
-			pst = cn.prepareStatement(
-					"SELECT P.*, C.* FROM CAFES C JOIN PROVEEDORES P ON C.PROV_ID = P.PROV_ID AND C.prov_id=\""
-							+ id_prov + "\"");
+			pst = cn.prepareStatement(CONSULTAR_MISMOPROV);
+			pst.setInt(1,id_prov);
 			rs = pst.executeQuery();
 			rs.next();
 			String nom = rs.getString("PROV_NOMBRE");
@@ -238,7 +242,7 @@ public class JDBCCafeDAO implements CafeDAO{
 			}
 		}
 	}
-	public void transferencia(String nom1, String nom2) throws AccesoDatosException {
+	public void transferencia(Cafe cafe1, Cafe cafe2) throws AccesoDatosException {
 		try {
 			this.cn = pool.getConnection();
 			cn.setAutoCommit(false);
@@ -278,9 +282,5 @@ public class JDBCCafeDAO implements CafeDAO{
 				}
 			}
 		}
-	}
-	
-	public BasicDataSource getPool(){
-		return this.pool;
 	}
 }
